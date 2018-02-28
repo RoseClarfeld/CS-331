@@ -1,0 +1,5 @@
+=
+comments contain invalid lexemes for testing exceptions
+
+* / 9 8 7 abc =
+num
