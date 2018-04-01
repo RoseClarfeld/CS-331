@@ -1,0 +1,9 @@
+program error(input, output);
+var
+    x,y : integer;
+
+begin
+    x := 5;
+    y := 6
+
+end.

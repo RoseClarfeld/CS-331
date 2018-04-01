@@ -20,15 +20,16 @@ public class LexicalAnalyzer {
         //intialize
         File file = new File("textfile.txt");
         Tokenizer tokenizer = new Tokenizer(file);
-        while (tokenizer.getNextToken() != eof) {
+        while (tokenizer.getNextToken().Tokentag != Tag.ENDOFFILE) {
             token = tokenizer.getNextToken();
             String result = tokenToString(token);
             System.out.println(result);
         }
-        if(tokenizer.getNextToken()== eof){
+        if(tokenizer.getNextToken().Tokentag== Tag.ENDOFFILE){
             token=(new Token(Tag.ENDOFFILE, ""));
             String result = tokenToString(token);
             System.out.println(result);
+            Runtime.getRuntime().halt(0);
         }
         Runtime.getRuntime().halt(0);
 

@@ -27,7 +27,8 @@ public class Tokenizer {
     private static InputStream is;
     //Hashtable to store reserved keywords
     private static Hashtable ids = new Hashtable<String, Integer>();
-
+public static String allChars = "";
+public static int indexAllChars = 0;
     private BufferedReader br;
 
     public static void calcNumLines(File file) throws IOException {
@@ -53,7 +54,26 @@ public class Tokenizer {
             is.close();
         }
     }
-
+    public Tokenizer(File file) throws IOException {
+        FileReader fRead = new FileReader(file);
+        BufferedReader bRead = new BufferedReader(fRead);
+        int read;
+        while ((read = bRead.read()) != -1) {
+            allChars = allChars + (char)read;
+        }
+        currentChar = getNextChar();
+        charPlusOne = getNextChar();
+        charPlusTwo = getNextChar();
+    }
+    private static char getNextChar() {
+        char c =' ';
+        if(indexAllChars != allChars.length()) {
+            c = allChars.charAt(indexAllChars);
+            indexAllChars++;
+        }
+        return c;
+    }
+/*
     public Tokenizer(File file) throws IOException {
         calcNumLines(file);
         //new buffered reader
@@ -134,7 +154,8 @@ public class Tokenizer {
         }
         lengthLine = currLine[indexOfLineArray].length();
     }
-
+*/
+/*
     private static char getNextChar() throws IOException {
         //cLine is a string that the current line goes into
         //string length is not getting properly tested because cline is already on a different line
@@ -183,7 +204,7 @@ char c =' ';
                 indexOfLineArray++;
                 cLine=currLine[indexOfLineArray];
                 stringLength=0;
-                c=cLine.charAt(0);*/
+                c=cLine.charAt(0);
             if (isWhiteSpace(c)) {
                 c = '\u0000';
                 return c;
@@ -192,6 +213,7 @@ char c =' ';
             return c;
         }
     }
+    */
 
     /*
         c =cLine.charAt((stringLength));
@@ -267,7 +289,6 @@ char c =' ';
         }*/
         boolean result = false;
         for (i = 0; i < VALID_CHARS.length(); i++) {
-
             if (c == VALID_CHARS.charAt(i)) {
                 result = true;
                 return result;
@@ -320,460 +341,444 @@ char c =' ';
     }
 
     public static Token getNextToken() throws IOException {
-        int number = 0;
-        String str = Character.toString(currentChar);
-        if (currentChar != '\u0000') {
+        if (indexAllChars != allChars.length()) {
             if (isValid(currentChar)) {
-                //{comment
-                if (lastToken == Tag.RIGHTBRACKET) {
-                    while (currentChar != '}' && (currentChar != '\u0000')) {
-                        //if reached end of string
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                    }
-                    if (currentChar == '\u0000') {
-                        setLastToken(Tag.ENDOFFILE);
-                        LexicalError.BadComment(indexOfLineArray, currentChar);
-                        return (new Token(lastToken, ""));
-                    }
-                    //must equal leftbracket
-                    setLastToken(Tag.LEFTBRACKET);
+                if (isWhiteSpace(currentChar)) {
+                    //{comment
                     currentChar = charPlusOne;
                     charPlusOne = charPlusTwo;
                     charPlusTwo = getNextChar();
-                    return (new Token(lastToken, ""));
                 }
-                switch (currentChar) {
-                    case '=':
-                        setLastToken(Tag.RELOP);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-
-                        return (new Token(lastToken, "1"));
-                    case '<':
-                        //<>
-                        if (charPlusOne == '>') {
+                    if (lastToken == Tag.RIGHTBRACKET) {
+                        while (currentChar != '}' && (currentChar != '\u0000')) {
+                            //if reached end of string
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "2"));
                         }
-                        //<=
-                        if (charPlusOne == '=') {
-                            setLastToken(Tag.RELOP);
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "5"));
-                        }
-                        //<
-                        setLastToken(Tag.RELOP);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, "3"));
-
-                    case '>':
-                        //>=
-                        if (charPlusOne == '=') {
-                            setLastToken(Tag.RELOP);
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "6"));
-                        }
-                        setLastToken(Tag.RELOP);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, "4"));
-                    case '+':
-                        if (getLastToken() == Tag.RIGHTPAREN || getLastToken() == Tag.RIGHTBRACKET || getLastToken() == Tag.IDENTIFIER || getLastToken() == Tag.INTCONSTANT || getLastToken() == Tag.REALCONSTANT) {
-
-                            setLastToken(Tag.ADDOP);
-                            //if (stringLength == (cLine.length())) {
-                            //  indexOfLineArray++;
-                            //cLine = currLine[indexOfLineArray];
-                            //stringLength = 0;
-                            //}
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "1"));
-                        }
-                        setLastToken(Tag.UNARYPLUS);
-                        //if (stringLength == (cLine.length())) {
-                        //  indexOfLineArray++;
-                        //cLine = currLine[indexOfLineArray];
-                        //stringLength = 0;
-                        // }
-
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-
-
-                    case '-':
-                        if (getLastToken() == Tag.RIGHTPAREN || getLastToken() == Tag.RIGHTBRACKET || getLastToken() == Tag.IDENTIFIER || getLastToken() == Tag.INTCONSTANT || getLastToken() == Tag.REALCONSTANT) {
-
-                            setLastToken(Tag.ADDOP);
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "2"));
-                        } else {
-                            setLastToken(Tag.UNARYMINUS);
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
+                        if (currentChar == '\u0000') {
+                            setLastToken(Tag.ENDOFFILE);
+                            LexicalError.BadComment(indexOfLineArray, currentChar);
                             return (new Token(lastToken, ""));
                         }
-
-                    case '*':
-
-                        setLastToken(Tag.MULOP);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, "1"));
-
-                    case '/':
-
-                        setLastToken(Tag.MULOP);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, "2"));
-
-
-                    case '{':
-                        setLastToken(Tag.RIGHTBRACKET);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-
-                    case '}':
-
+                        //must equal leftbracket
                         setLastToken(Tag.LEFTBRACKET);
                         currentChar = charPlusOne;
                         charPlusOne = charPlusTwo;
                         charPlusTwo = getNextChar();
                         return (new Token(lastToken, ""));
-                    case ',':
-
-                        setLastToken(Tag.COMMA);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-
-                    case ';':
-
-                        setLastToken(Tag.SEMICOLON);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-
-                    case ':':
-
-                        setLastToken(Tag.COLON);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-                    case '(':
-
-                        setLastToken(Tag.RIGHTPAREN);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-                    case ')':
-
-                        setLastToken(Tag.LEFTPAREN);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-                    case '.':
-                        if (charPlusOne == '.') {
-                            setLastToken(Tag.DOUBLEDOT);
+                    }
+                    switch (currentChar) {
+                        case '=':
+                            setLastToken(Tag.RELOP);
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
-                            return (new Token(lastToken, ""));
-                        }
-                        setLastToken(Tag.ENDMARKER);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, ""));
-                }
 
-
-                if (isLetter(currentChar)) {
-                    Id = "";
-
-                    //figure out how to skip whitespace
-                    int line = indexOfLineArray;
-                    while (line == indexOfLineArray && !isSymbol(currentChar) && Id.length() < 250) {
-                        int lengthID = Id.length();
-                        Id = Id + currentChar;
-                        Id = Id.toUpperCase();
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                    }
-                    if (Id.length() >= 250) {
-                        LexicalError.TooLongID(indexOfLineArray, currentChar);
-                        return (new Token(lastToken, ""));
-                    }
-                    //must have read a full id WHERE IS CONTAINS KEY
-                    if (ids.containsKey(Id)) {
-                        if (Id == "OR") {
-                            setLastToken(Tag.ADDOP);
+                            return (new Token(lastToken, "1"));
+                        case '<':
+                            //<>
+                            if (charPlusOne == '>') {
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "2"));
+                            }
+                            //<=
+                            if (charPlusOne == '=') {
+                                setLastToken(Tag.RELOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "5"));
+                            }
+                            //<
+                            setLastToken(Tag.RELOP);
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
                             return (new Token(lastToken, "3"));
-                        }
-                        if (Id == "DIV") {
-                            setLastToken(Tag.MULOP);
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "3"));
-                        }
-                        if (Id == "MOD") {
-                            setLastToken(Tag.MULOP);
+
+                        case '>':
+                            //>=
+                            if (charPlusOne == '=') {
+                                setLastToken(Tag.RELOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "6"));
+                            }
+                            setLastToken(Tag.RELOP);
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
                             return (new Token(lastToken, "4"));
-                        }
-                        if (Id == "AND") {
-                            setLastToken(Tag.MULOP);
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, "5"));
-                        }
-                        setLastToken(Tag.IDENTIFIER);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, Id));
+                        case '+':
+                            if (getLastToken() == Tag.RIGHTPAREN || getLastToken() == Tag.RIGHTBRACKET || getLastToken() == Tag.IDENTIFIER || getLastToken() == Tag.INTCONSTANT || getLastToken() == Tag.REALCONSTANT) {
 
-                    } else {
-                        reserve(new Word(Id, ids.size() + 1));
-                        setLastToken(Tag.IDENTIFIER);
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, Id));
-                    }
-                }
-
-
-                //if peek is a number
-                if (isNumber(currentChar)) {
-                    num = " ";
-                    while (!isWhiteSpace(currentChar) && num.length() < 250) {
-                        //if current char is a letter
-                        if (isLetter(currentChar)) {
-                            if (currentChar != 'e' && currentChar != 'E') {
-                                if (countPoint == 1) {
-
-                                    setLastToken(Tag.REALCONSTANT);
-                                    currentChar = charPlusOne;
-                                    charPlusOne = charPlusTwo;
-                                    charPlusTwo = getNextChar();
-                                    return (new Token(lastToken, num));
-                                }
-                                setLastToken(Tag.INTCONSTANT);
-                                stringLength++;
+                                setLastToken(Tag.ADDOP);
+                                //if (stringLength == (cLine.length())) {
+                                //  indexOfLineArray++;
+                                //cLine = currLine[indexOfLineArray];
+                                //stringLength = 0;
+                                //}
                                 currentChar = charPlusOne;
                                 charPlusOne = charPlusTwo;
                                 charPlusTwo = getNextChar();
-                                return (new Token(lastToken, num));
-
+                                return (new Token(lastToken, "1"));
                             }
-                            //currchar = e
-                            if (isLetter(charPlusOne)) {
-                                if (countPoint == 1) {
+                            setLastToken(Tag.UNARYPLUS);
+                            //if (stringLength == (cLine.length())) {
+                            //  indexOfLineArray++;
+                            //cLine = currLine[indexOfLineArray];
+                            //stringLength = 0;
+                            // }
 
-                                    setLastToken(Tag.REALCONSTANT);
-                                    currentChar = charPlusOne;
-                                    charPlusOne = charPlusTwo;
-                                    charPlusTwo = getNextChar();
-                                    return (new Token(lastToken, num));
-                                }
-                                setLastToken(Tag.INTCONSTANT);
-                                currentChar = charPlusOne;
-                                charPlusOne = charPlusTwo;
-                                charPlusTwo = getNextChar();
-                                return (new Token(lastToken, num));
-
-
-                            }
-                            //this is wrong
-                            if (countE > 1) {
-                                if (countPoint == 1) {
-
-                                    setLastToken(Tag.REALCONSTANT);
-                                }
-                                stringLength++;
-                                currentChar = charPlusOne;
-                                charPlusOne = charPlusTwo;
-                                charPlusTwo = getNextChar();
-                                return (new Token(lastToken, num));
-                            }
-
-                            setLastToken(Tag.INTCONSTANT);
-                            stringLength++;
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, num));
-                        }
-                        countE++;
-                        num = num + currentChar;
-                        stringLength++;
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                    }
-                    if (isSymbol(currentChar)) {
-                        if (currentChar != '.') {
-                            if (countPoint == 1) {
-
-                                setLastToken(Tag.REALCONSTANT);
-                                stringLength++;
-                                currentChar = charPlusOne;
-                                charPlusOne = charPlusTwo;
-                                charPlusTwo = getNextChar();
-                                return (new Token(lastToken, num));
-
-                            }
-
-                            setLastToken(Tag.INTCONSTANT);
-                            stringLength++;
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, num));
-                        }
-                        //so currChar=.
-                        if (countPoint == 1) {
-
-                            setLastToken(Tag.REALCONSTANT);
-                            stringLength++;
-                            currentChar = charPlusOne;
-                            charPlusOne = charPlusTwo;
-                            charPlusTwo = getNextChar();
-                            return (new Token(lastToken, num));
-                        }
-                        //not already a dot
-                        if (charPlusOne == '.') {
-
-                            setLastToken(Tag.DOUBLEDOT);
-                            stringLength++;
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
                             return (new Token(lastToken, ""));
-                        }
-                        //so char is a dot but just normal
-                        num = num + currentChar;
-                        stringLength++;
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                    }
-                    //current char is a number
-                    if (charPlusOne == '.' && !isNumber(charPlusTwo)) {
-                        num = num + currentChar;
-                        if (countPoint == 1) {
 
-                            setLastToken(Tag.REALCONSTANT);
-                            stringLength++;
+
+                        case '-':
+                            if (getLastToken() == Tag.RIGHTPAREN || getLastToken() == Tag.RIGHTBRACKET || getLastToken() == Tag.IDENTIFIER || getLastToken() == Tag.INTCONSTANT || getLastToken() == Tag.REALCONSTANT) {
+
+                                setLastToken(Tag.ADDOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "2"));
+                            } else {
+                                setLastToken(Tag.UNARYMINUS);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, ""));
+                            }
+
+                        case '*':
+
+                            setLastToken(Tag.MULOP);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, "1"));
+
+                        case '/':
+
+                            setLastToken(Tag.MULOP);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, "2"));
+
+
+                        case '{':
+                            setLastToken(Tag.RIGHTBRACKET);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+
+                        case '}':
+
+                            setLastToken(Tag.LEFTBRACKET);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+                        case ',':
+
+                            setLastToken(Tag.COMMA);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+
+                        case ';':
+
+                            setLastToken(Tag.SEMICOLON);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+
+                        case ':':
+
+                            setLastToken(Tag.COLON);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+                        case '(':
+
+                            setLastToken(Tag.RIGHTPAREN);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+                        case ')':
+
+                            setLastToken(Tag.LEFTPAREN);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+                        case '.':
+                            if (charPlusOne == '.') {
+                                setLastToken(Tag.DOUBLEDOT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, ""));
+                            }
+                            setLastToken(Tag.ENDMARKER);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, ""));
+                    }
+
+
+                    if (isLetter(currentChar)) {
+                        Id = "";
+                        while (!isWhiteSpace(currentChar)&& !isSymbol(currentChar) && Id.length() < 250) {
+                            int lengthID = Id.length();
+                            Id = Id + currentChar;
+                            Id = Id.toUpperCase();
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                        }
+                        if (Id.length() >= 250) {
+                            LexicalError.TooLongID(indexOfLineArray, currentChar);
+                            return (new Token(lastToken, ""));
+                        }
+                        //must have read a full id WHERE IS CONTAINS KEY
+                        if (ids.containsKey(Id)) {
+                            if (Id == "OR") {
+                                setLastToken(Tag.ADDOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "3"));
+                            }
+                            if (Id == "DIV") {
+                                setLastToken(Tag.MULOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "3"));
+                            }
+                            if (Id == "MOD") {
+                                setLastToken(Tag.MULOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "4"));
+                            }
+                            if (Id == "AND") {
+                                setLastToken(Tag.MULOP);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, "5"));
+                            }
+                            setLastToken(Tag.IDENTIFIER);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, Id));
+
+                        } else {
+                            reserve(new Word(Id, ids.size() + 1));
+                            setLastToken(Tag.IDENTIFIER);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, Id));
+                        }
+                    }
+
+
+                    //if peek is a number
+                    if (isNumber(currentChar)) {
+                        num = " ";
+                        while (!isWhiteSpace(currentChar) && num.length() < 250) {
+                            //if current char is a letter
+                            if (isLetter(currentChar)) {
+                                if (currentChar != 'e' && currentChar != 'E') {
+                                    if (countPoint == 1) {
+
+                                        setLastToken(Tag.REALCONSTANT);
+                                        currentChar = charPlusOne;
+                                        charPlusOne = charPlusTwo;
+                                        charPlusTwo = getNextChar();
+                                        return (new Token(lastToken, num));
+                                    }
+                                    setLastToken(Tag.INTCONSTANT);
+                                    currentChar = charPlusOne;
+                                    charPlusOne = charPlusTwo;
+                                    charPlusTwo = getNextChar();
+                                    return (new Token(lastToken, num));
+
+                                }
+                                //currchar = e
+                                if (isLetter(charPlusOne)) {
+                                    if (countPoint == 1) {
+
+                                        setLastToken(Tag.REALCONSTANT);
+                                        currentChar = charPlusOne;
+                                        charPlusOne = charPlusTwo;
+                                        charPlusTwo = getNextChar();
+                                        return (new Token(lastToken, num));
+                                    }
+                                    setLastToken(Tag.INTCONSTANT);
+                                    currentChar = charPlusOne;
+                                    charPlusOne = charPlusTwo;
+                                    charPlusTwo = getNextChar();
+                                    return (new Token(lastToken, num));
+
+
+                                }
+                                //this is wrong
+                                if (countE > 1) {
+                                    if (countPoint == 1) {
+
+                                        setLastToken(Tag.REALCONSTANT);
+                                    }
+                                    currentChar = charPlusOne;
+                                    charPlusOne = charPlusTwo;
+                                    charPlusTwo = getNextChar();
+                                    return (new Token(lastToken, num));
+                                }
+
+                                setLastToken(Tag.INTCONSTANT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, num));
+                            }
+                            countE++;
+                            num = num + currentChar;
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                        }
+                        if (isSymbol(currentChar)) {
+                            if (currentChar != '.') {
+                                if (countPoint == 1) {
+
+                                    setLastToken(Tag.REALCONSTANT);
+                                    currentChar = charPlusOne;
+                                    charPlusOne = charPlusTwo;
+                                    charPlusTwo = getNextChar();
+                                    return (new Token(lastToken, num));
+
+                                }
+
+                                setLastToken(Tag.INTCONSTANT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, num));
+                            }
+                            //so currChar=.
+                            if (countPoint == 1) {
+
+                                setLastToken(Tag.REALCONSTANT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, num));
+                            }
+                            //not already a dot
+                            if (charPlusOne == '.') {
+
+                                setLastToken(Tag.DOUBLEDOT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, ""));
+                            }
+                            //so char is a dot but just normal
+                            num = num + currentChar;
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                        }
+                        //current char is a number
+                        if (charPlusOne == '.' && !isNumber(charPlusTwo)) {
+                            num = num + currentChar;
+                            if (countPoint == 1) {
+
+                                setLastToken(Tag.REALCONSTANT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, num));
+                            }
+
+                            setLastToken(Tag.INTCONSTANT);
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
                             return (new Token(lastToken, num));
                         }
+                        if ((charPlusOne == 'e' || charPlusOne == 'E') && !isNumber(charPlusTwo)) {
+                            num = num + currentChar;
+                            if (countPoint == 1) {
 
-                        setLastToken(Tag.INTCONSTANT);
-                        stringLength++;
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, num));
-                    }
-                    if ((charPlusOne == 'e' || charPlusOne == 'E') && !isNumber(charPlusTwo)) {
-                        num = num + currentChar;
-                        if (countPoint == 1) {
+                                setLastToken(Tag.REALCONSTANT);
+                                currentChar = charPlusOne;
+                                charPlusOne = charPlusTwo;
+                                charPlusTwo = getNextChar();
+                                return (new Token(lastToken, num));
+                            }
 
-                            setLastToken(Tag.REALCONSTANT);
-                            stringLength++;
+                            setLastToken(Tag.INTCONSTANT);
                             currentChar = charPlusOne;
                             charPlusOne = charPlusTwo;
                             charPlusTwo = getNextChar();
                             return (new Token(lastToken, num));
                         }
-
-                        setLastToken(Tag.INTCONSTANT);
-                        stringLength++;
+                        num = num + currentChar;
                         currentChar = charPlusOne;
                         charPlusOne = charPlusTwo;
                         charPlusTwo = getNextChar();
-                        return (new Token(lastToken, num));
-                    }
-                    num = num + currentChar;
-                    stringLength++;
-                    currentChar = charPlusOne;
-                    charPlusOne = charPlusTwo;
-                    charPlusTwo = getNextChar();
 
-                    if (num.length() >= 250) {
-                        LexicalError.TooLongID(indexOfLineArray, currentChar);
-                        //
-                        return (new Token(lastToken, ""));
-                    }
-                    if (countPoint == 0) {
+                        if (num.length() >= 250) {
+                            LexicalError.TooLongID(indexOfLineArray, currentChar);
+                            //
+                            return (new Token(lastToken, ""));
+                        }
+                        if (countPoint == 0) {
 
-                        setLastToken(Tag.INTCONSTANT);
-                        stringLength++;
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, num));
-                    } else {
+                            setLastToken(Tag.INTCONSTANT);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, num));
+                        } else {
 
-                        setLastToken(Tag.INTCONSTANT);
-                        stringLength++;
-                        currentChar = charPlusOne;
-                        charPlusOne = charPlusTwo;
-                        charPlusTwo = getNextChar();
-                        return (new Token(lastToken, num));
+                            setLastToken(Tag.INTCONSTANT);
+                            currentChar = charPlusOne;
+                            charPlusOne = charPlusTwo;
+                            charPlusTwo = getNextChar();
+                            return (new Token(lastToken, num));
+
+                        }
+
 
                     }
-
 
                 }
+                LexicalError.InvalidInput(indexOfLineArray, currentChar);
+                return (new Token(lastToken, ""));
 
             }
-            LexicalError.InvalidInput(indexOfLineArray, currentChar);
+            setLastToken(Tag.ENDOFFILE);
             return (new Token(lastToken, ""));
-
-        }
-        setLastToken(Tag.ENDOFFILE);
-        return (new Token(lastToken, ""));
     }
 
 

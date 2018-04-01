@@ -32,10 +32,14 @@ public class Parser {
                     ParserError.UnexpectedToken(tokenType);
                 } else {
                     GrammarSymbol[] rule = rhsTable.getRule(parseTable.getEntry(tokenType, predicted));
-                    for (int i = 0; i < rule.length; i++) {
+                    for (int i = rule.length-1; i >= 0; i--) {
                         stack.push(rule[i]);
                     }
                 }
+            }
+            else if (predicted.isAction()) {
+                tokeType = ParserMain.tokensStack.pop().Tokentag;
+                tokenType = tokenValues[tokeType];
             }
             //predicted is a terminal
             else {
